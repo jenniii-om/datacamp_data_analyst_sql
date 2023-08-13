@@ -84,3 +84,41 @@ USING(code)
 ORDER BY language
 ;
 
+
+
+
+
+--- Joining multiple tables
+
+
+-- Suppose you are interested in the relationship between fertility and unemployment rates. 
+-- Your task in this exercise is to join tables to return the country name, year, fertility rate, and unemployment rate in a single result from the countries, populations and economies tables.
+
+-- Perform an inner join of countries AS c (left) with populations AS p (right), on code.
+-- Select name, year and fertility_rate.
+-- Select relevant fields
+SELECT 
+    name
+    ,year
+    ,fertility_rate
+FROM countries AS c
+-- Inner join countries and populations, aliased, on code
+INNER JOIN populations AS p
+ON c.code = p.country_code
+;
+
+-- Chain another inner join to your query with the economies table AS e, using code.
+-- Select name, and using table aliases, select year and unemployment_rate from economies.
+-- Select fields
+SELECT 
+    name
+    ,e.year AS year 
+    ,fertility_rate
+    ,e.unemployment_rate AS unemployment_rate
+FROM countries AS c
+INNER JOIN populations AS p
+ON c.code = p.country_code
+-- Join to economies (as e)
+INNER JOIN economies AS e 
+-- Match on country code
+USING(code) ;

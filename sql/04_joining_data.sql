@@ -222,3 +222,82 @@ USING(code)
 FULL JOIN currencies as c2
 USING(code) 
 WHERE region LIKE 'M%esia';
+
+
+
+
+-- CROSS JOIN
+-- CROSS JOIN can be incredibly helpful when asking questions that involve looking at all possible combinations or pairings between two sets of data.
+
+-- Imagine you are a researcher interested in the languages spoken in two countries: Pakistan and India. You are interested in asking:
+-- What are the languages presently spoken in the two countries?
+SELECT c.name AS country, l.name AS language
+-- Inner join countries as c with languages as l on code
+FROM countries AS c
+INNER JOIN languages as l
+USING(code)
+WHERE c.code IN ('PAK','IND')
+	AND l.code in ('PAK','IND');
+
+
+
+
+-- You will determine the names of the five countries and their respective regions with the lowest life expectancy for the year 2010. 
+-- Use your knowledge about joins, filtering, sorting and limiting to create this list!
+
+SELECT 
+	c.name AS country,
+    region,
+    life_expectancy AS life_exp
+FROM countries AS c
+-- Join to populations (alias as p) using an appropriate join
+LEFT JOIN populations as p
+ON c.code = p.country_code
+-- Filter for only results in the year 2010
+WHERE p.year = 2010
+-- Sort by life_exp
+ORDER BY life_exp 
+-- Limit to five records
+LIMIT 5;
+
+
+
+
+--------------
+-- SELF JOINS
+--------------
+
+-- Comparing a country to itself
+-- Self joins are very useful for comparing data from one part of a table with another part of the same table. 
+
+-- Suppose you are interested in finding out how much the populations for each country changed from 2010 to 2015. You can visualize this change by performing a self join.
+SELECT 
+	p1.country_code, 
+    p1.size AS size2010, 
+    p2.size AS size2015
+FROM populations AS p1
+INNER JOIN populations AS p2
+ON p1.country_code = p2.country_code
+WHERE p1.year = 2010
+-- Filter such that p1.year is always five years before p2.year
+AND p1.year = p2.year-5
+;
+
+
+
+
+-- SET THEORY OPERATIONS
+
+-- In this exercise, you have two tables, economies2015 and economies2019, available to you under the tabs in the console. You'll perform a set operation to stack all records in these two tables on top of each other, excluding duplicates.
+
+-- Select all fields from economies2015
+SELECT *
+FROM economies2015    
+-- Set operation
+UNION
+-- Select all fields from economies2019
+SELECT * 
+FROM economies2019
+ORDER BY code, year;
+
+

@@ -122,3 +122,103 @@ ON c.code = p.country_code
 INNER JOIN economies AS e 
 -- Match on country code
 USING(code) ;
+
+
+
+
+-----------------------
+-- LEFT and RIGHT JOINs
+-----------------------
+
+-- You'll begin with an INNER JOIN with the cities table (left) and countries table (right). 
+-- This helps if you are interested only in records where a country is present in both tables.
+
+-- You'll then change to a LEFT JOIN. This helps if you're interested in returning all countries in the cities table, whether or not they have a match in the countries table.
+
+-- Perform an inner join with cities AS c1 on the left and countries as c2 on the right.
+-- Use code as the field to merge your tables on.
+SELECT 
+    c1.name AS city,
+    code,
+    c2.name AS country,
+    region,
+    city_proper_pop
+FROM cities AS c1
+-- Perform an inner join with cities as c1 and countries as c2 on country code
+INNER JOIN countries AS c2
+ON c1.country_code = c2.code
+ORDER BY code DESC;
+
+
+-- Change the code to perform a LEFT JOIN instead of an INNER JOIN. After executing this query, have a look at how many records the query result contains.
+SELECT 
+    c1.name AS city
+ 	,c2.code AS country_code
+    ,c2.name AS country
+    ,c2.region AS region
+    ,c1.city_proper_pop AS city_population
+FROM world.cities AS c1
+-- Join right table (with alias)
+LEFT JOIN world.countries AS c2
+ON c1.country_code = c2.code
+ORDER BY code DESC;
+
+
+
+-- Building on your LEFT JOIN
+
+-- You will use AVG() in combination with a LEFT JOIN to determine the average gross domestic product (GDP) per capita by region in 2010.
+SELECT 
+    c.region AS region
+    ,AVG(gdp_percapita) AS avg_gdp
+FROM countries AS c
+LEFT JOIN economies AS e
+USING(code)
+WHERE e.year = 2010
+GROUP BY region
+-- Order by descending avg_gdp
+ORDER BY avg_gdp DESC
+-- Return only first 10 records
+LIMIT 10
+;
+
+
+
+
+--- FULL JOIN
+
+-- Comparing joins
+
+-- Perform a full join with countries (left) and currencies (right).
+-- Filter for the North America region or NULL country names.
+
+SELECT name AS country, code, region, basic_unit
+FROM countries
+-- Join to currencies
+FULL JOIN currencies 
+USING (code)
+-- Where region is North America or name is null
+WHERE region = 'North America'
+    OR name IS NULL 
+ORDER BY region;
+
+
+
+-- Chaining FULL JOINs
+
+-- Suppose you are doing some research on Melanesia and Micronesia, and are interested in pulling information about languages and currencies into the data we see for these regions in the countries table. Since languages and currencies exist in separate tables, this will require two consecutive full joins involving the countries, languages and currencies tables.
+
+SELECT 
+	c1.name AS country, 
+    region, 
+    l.name AS language,
+	basic_unit, 
+    frac_unit
+FROM countries as c1 
+-- Full join with languages (alias as l)
+FULL JOIN languages as l 
+USING(code)
+-- Full join with currencies (alias as c2)
+FULL JOIN currencies as c2
+USING(code) 
+WHERE region LIKE 'M%esia';

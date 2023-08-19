@@ -288,6 +288,10 @@ AND p1.year = p2.year-5
 
 -- SET THEORY OPERATIONS
 
+
+-- UNION
+
+
 -- In this exercise, you have two tables, economies2015 and economies2019, available to you under the tabs in the console. You'll perform a set operation to stack all records in these two tables on top of each other, excluding duplicates.
 
 -- Select all fields from economies2015
@@ -300,4 +304,104 @@ SELECT *
 FROM economies2019
 ORDER BY code, year;
 
+
+
+-- Perform an appropriate set operation that determines all pairs of country code and year (in that order) from economies and populations, excluding duplicates.
+-- Order by country code and year.
+-- Query that determines all pairs of code and year from economies and populations, without duplicates
+SELECT code AS country_code, year
+FROM economies
+UNION
+SELECT country_code, year
+FROM populations
+ORDER BY country_code, year
+;
+
+
+-- INTERSECT
+
+-- Return all city names that are also country names.
+-- Return all cities with the same name as a country
+SELECT name
+FROM countries
+INTERSECT
+SELECT name 
+FROM cities
+;
+
+
+-- EXCEPT
+
+-- Return all cities that do not have the same name as a country
+SELECT name
+FROM cities
+EXCEPT
+SELECT name
+FROM countries
+ORDER BY name;
+
+
+
+
+-- SUBQUERYING / NESTED SQL
+
+-- Semi join
+-- Let's say you are interested in identifying languages spoken in the Middle East. The languages table contains information about languages and countries, but it does not tell you what region the countries belong to. You can build up a semi join by filtering the countries table by a particular region, and then using this to further filter the languages table.
+
+SELECT DISTINCT name
+FROM languages
+-- Add syntax to use bracketed subquery below as a filter
+WHERE code IN
+    (SELECT code
+    FROM countries
+    WHERE region = 'Middle East')
+ORDER BY name;
+
+
+-- Diagnosing problems using anti join
+-- Say you are interested in identifying currencies of Oceanian countries. You have written the following INNER JOIN, which returns 15 records. Now, you want to ensure that all Oceanian countries from the countries table are included in this result. You'll do this in the first step.
+
+SELECT c1.code, name, basic_unit AS currency
+FROM countries AS c1
+INNER JOIN currencies AS c2
+ON c1.code = c2.code
+WHERE c1.continent = 'Oceania';
+
+SELECT code, name
+FROM countries
+WHERE continent = 'Oceania'
+-- Filter for countries not included in the bracketed subquery
+  AND code NOT IN
+    (SELECT code
+    FROM currencies);
+
+
+
+-- Subquery inside WHERE
+
+-- In this exercise, you will nest a subquery from the populations table inside another query from the same table, populations. Your goal is to figure out which countries had high average life expectancies in 2015.
+
+SELECT *
+FROM populations
+-- Filter for only those populations where life expectancy is 1.15 times higher than average
+WHERE life_expectancy > 1.15 *
+  (SELECT AVG(life_expectancy)
+   FROM populations
+   WHERE year = 2015) 
+    AND year = 2015;
+
+
+-- strengthen your knowledge of subquerying by identifying capital cities in order of largest to smallest population.
+-- Select relevant fields from cities table
+SELECT
+    name
+    ,country_code
+    ,urbanarea_pop
+FROM cities
+-- Filter using a subquery on the countries table
+WHERE name in (
+    SELECT capital
+    FROM countries
+)
+ORDER BY urbanarea_pop DESC;
 

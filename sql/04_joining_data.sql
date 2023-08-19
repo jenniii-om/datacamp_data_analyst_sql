@@ -346,6 +346,7 @@ ORDER BY name;
 -- SUBQUERYING / NESTED SQL
 
 -- Semi join
+-- Subquery inside WHERE
 -- Let's say you are interested in identifying languages spoken in the Middle East. The languages table contains information about languages and countries, but it does not tell you what region the countries belong to. You can build up a semi join by filtering the countries table by a particular region, and then using this to further filter the languages table.
 
 SELECT DISTINCT name
@@ -405,3 +406,112 @@ WHERE name in (
 )
 ORDER BY urbanarea_pop DESC;
 
+
+
+-- Subquery inside SELECT
+
+-- In Step 1, you'll begin with a LEFT JOIN combined with a GROUP BY to select the nine countries with the most cities appearing in the cities table, along with the counts of these cities. 
+-- Find top nine countries with the most cities
+SELECT c1.name AS country 
+    ,COUNT(c2.name) AS cities_num
+FROM countries AS c1
+LEFT JOIN cities AS c2
+ON c1.code = c2.country_code
+GROUP BY country
+-- Order by count of cities as cities_num
+ORDER BY cities_num DESC
+    ,country
+LIMIT 9
+;
+
+-- In Step 2, you'll write a query that returns the same result as the join, but leveraging a nested query instead.
+SELECT countries.name AS country,
+-- Subquery that provides the count of cities   
+  (SELECT COUNT(*)
+   FROM cities
+   WHERE cities.country_code = countries.code
+   ) AS cities_num
+FROM countries
+ORDER BY cities_num DESC, country
+LIMIT 9;
+
+
+
+-- Subquery inside FROM
+-- you are interested in determining the number of languages spoken for each country. You want to present this information alongside each country's local_name, which is a field only present in the countries table and not in the languages table. You'll use a subquery inside FROM to bring information from these two tables together!
+
+-- Select code, and language count as lang_num
+/*SELECT 
+    countries.code
+    ,lang_num
+FROM countries,
+    (SELECT code, COUNT(*) AS lang_num
+        FROM languages
+    GROUP BY code) AS lang
+WHERE countries.code = lang.code
+-- ORDER BY countries.code
+;*/
+
+-- Select code, and language count as lang_num
+SELECT 
+    countries.code
+    ,COUNT(languages.name) AS lang_num
+FROM countries, languages
+WHERE countries.code = languages.code
+GROUP BY countries.code
+;
+
+
+-- Select local_name and lang_num from appropriate tables
+SELECT 
+  countries.local_name
+  ,sub.lang_num
+FROM countries
+  ,(SELECT code, COUNT(*) AS lang_num
+  FROM languages
+  GROUP BY code) AS sub
+-- Where codes match
+WHERE countries.code = sub.code
+ORDER BY lang_num DESC;
+
+
+-- Subquery challenge
+
+--Suppose you're interested in analyzing inflation and unemployment rate for certain countries in 2015. You are not interested in countries with "Republic" or "Monarchy" as their form of government, but are interested in all other forms of government, such as emirate federations, socialist states, and commonwealths.
+
+-- Select relevant fields
+SELECT economies.code
+  ,economies.inflation_rate
+  ,economies.unemployment_rate
+FROM economies
+WHERE year = 2015 
+  AND code NOT IN
+-- Subquery returning country codes filtered on gov_form
+	(SELECT code
+  FROM countries
+  WHERE gov_form LIKE '%Republic%' OR 
+    gov_form LIKE '%Monarchy%')
+ORDER BY inflation_rate;
+
+
+-- Your task is to determine the top 10 capital cities in Europe and the Americas by city_perc, a metric you'll calculate. city_perc is a percentage that calculates the "proper" population in a city as a percentage of the total population in the wider metro area, as follows:
+
+-- Select fields from cities
+SELECT cities.name
+    ,cities.country_code
+    ,cities.city_proper_pop
+    ,cities.metroarea_pop
+    ,(cities.city_proper_pop / cities.metroarea_pop) * 100 AS city_perc
+FROM cities
+-- Use subquery to filter city name
+WHERE cities.name IN (
+    SELECT capital
+    FROM countries
+    WHERE continent LIKE '%America%' OR
+        continent LIKE '%Europe%'
+    )
+-- Add filter condition such that metroarea_pop does not have null values
+AND cities.metroarea_pop IS NOT NULL
+-- Sort and limit the result
+ORDER BY city_perc DESC
+LIMIT 10;

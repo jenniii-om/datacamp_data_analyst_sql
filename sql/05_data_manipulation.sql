@@ -72,3 +72,60 @@ LEFT JOIN teams_spain AS t
 ON m.awayteam_id = t.team_api_id
 -- Filter for Barcelona as the home team
 WHERE m.hometeam_id = 8634; 
+
+
+
+-- CASE statements comparing two column values part 2
+-- construct a query to determine the outcome of Barcelona's matches where they played as the away team. 
+
+-- Select matches where Barcelona was the away team
+SELECT  
+	m.date,
+	t.team_long_name AS opponent,
+	CASE WHEN m.home_goal < m.away_goal THEN 'Barcelona win!'
+        WHEN m.home_goal > m.away_goal THEN 'Barcelona loss :(' 
+        ELSE 'Tie' END AS outcome
+FROM matches_spain AS m
+-- Join teams_spain to matches_spain
+LEFT JOIN teams_spain AS t 
+ON m.hometeam_id = t.team_api_id
+WHERE m.awayteam_id = 8634;
+
+
+
+
+
+-- Barcelona and Real Madrid have been rival teams for more than 80 years. Matches between these two teams are given the name El Clásico (The Classic). In this exercise, you will query a list of matches played between these two rivals.
+
+SELECT 
+	date,
+	-- Identify the home team as Barcelona or Real Madrid
+	CASE WHEN hometeam_id = 8634 THEN 'FC Barcelona' 
+        ELSE 'Real Madrid CF' END AS home,
+    -- Identify the away team as Barcelona or Real Madrid
+	CASE WHEN awayteam_id = 8634 THEN 'FC Barcelona' 
+        ELSE 'Real Madrid CF' END AS away
+FROM matches_spain
+WHERE (awayteam_id = 8634 OR hometeam_id = 8634)
+      AND (awayteam_id = 8633 OR hometeam_id = 8633);
+
+
+
+SELECT 
+	date,
+	CASE WHEN hometeam_id = 8634 THEN 'FC Barcelona' 
+         ELSE 'Real Madrid CF' END as home,
+	CASE WHEN awayteam_id = 8634 THEN 'FC Barcelona' 
+         ELSE 'Real Madrid CF' END as away,
+	-- Identify all possible match outcomes
+	CASE WHEN home_goal > away_goal AND hometeam_id = 8634 THEN 'Barcelona win!'
+        WHEN home_goal > away_goal AND hometeam_id = 8633 THEN 'Real Madrid win!'
+        WHEN home_goal < away_goal AND awayteam_id = 8634 THEN 'Barcelona win!'
+        WHEN home_goal < away_goal AND awayteam_id = 8633 THEN 'Real Madrid win!'
+        ELSE 'Tie!' END AS outcome
+FROM matches_spain
+WHERE (awayteam_id = 8634 OR hometeam_id = 8634)
+      AND (awayteam_id = 8633 OR hometeam_id = 8633);
+
+
+

@@ -454,3 +454,87 @@ WHERE
 	-- Filter the main query using the subquery
 	s.avg_goals > (SELECT AVG(home_goal + away_goal) 
                     FROM match WHERE season = '2012/2013');
+
+
+
+
+-- Correlated Subqueries
+
+--- In this exercise, you will practice using correlated subqueries to examine matches with scores that are extreme outliers for each country -- above 3 times the average score!
+
+SELECT 
+	-- Select country ID, date, home, and away goals from match
+	main.country_id,
+    main.date,
+    main.home_goal, 
+    main.away_goal
+FROM match AS main
+WHERE 
+	-- Filter the main query by the subquery
+	(home_goal + away_goal) > 
+        (SELECT AVG((sub.home_goal + sub.away_goal) * 3)
+         FROM match AS sub
+         -- Join the main query to the subquery in WHERE
+         WHERE main.country_id = sub.country_id);
+
+
+-- In this exercise, you're going to add an additional column for matching to answer the question -- what was the highest scoring match for each country, in each season?
+
+SELECT 
+	-- Select country ID, date, home, and away goals from match
+	main.country_id,
+    main.date,
+    main.home_goal,
+    main.away_goal
+FROM match AS main
+WHERE 
+	-- Filter for matches with the highest number of goals scored
+	(home_goal + away_goal) = 
+        (SELECT MAX(sub.home_goal + sub.away_goal)
+         FROM match AS sub
+         WHERE main.country_id = sub.country_id
+               AND main.season = sub.season);
+
+
+
+-- Nested subqueries
+
+-- In this exercise, you will practice creating a nested subquery to examine the highest total number of goals in each season, overall, and during July across all seasons.
+
+SELECT
+	-- Select the season and max goals scored in a match
+	season,
+    MAX(home_goal + away_goal) AS max_goals,
+    -- Select the overall max goals scored in a match
+   (SELECT MAX(home_goal + away_goal) FROM match) AS overall_max_goals,
+   -- Select the max number of goals scored in any match in July
+   (SELECT MAX(home_goal + away_goal) 
+    FROM match
+    WHERE id IN (
+          SELECT id FROM match WHERE EXTRACT(MONTH FROM date) = 07)) AS july_max_goals
+FROM match
+GROUP BY season;
+
+
+-- Nest a subquery in FROM
+-- What's the average number of matches per season where a team scored 5 or more goals? How does this differ by country?
+
+SELECT
+	c.name AS country,
+    -- Calculate the average matches per season
+	AVG(outer_s.matches) AS avg_seasonal_high_scores
+FROM country AS c
+-- Left join outer_s to country
+LEFT JOIN (
+  SELECT country_id, season,
+         COUNT(id) AS matches
+  FROM (
+    SELECT country_id, season, id
+	FROM match
+	WHERE home_goal >= 5 OR away_goal >= 5) AS inner_s
+  -- Close parentheses and alias the subquery
+  GROUP BY country_id, season) AS outer_s
+ON c.id = outer_s.country_id
+GROUP BY country;
+
+

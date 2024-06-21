@@ -214,3 +214,41 @@ SELECT 'revenues_change'::varchar AS measure
 
 
 -- SELECT * FROM correlations;
+
+
+-- Instructions 3/3
+-- Select all rows and columns from the correlations table to view the correlation matrix.
+-- First, you will need to round each correlation to 2 decimal places.
+-- The output of corr() is of type double precision, so you will need to also cast columns to numeric.
+
+DROP TABLE IF EXISTS correlations;
+
+CREATE TEMP TABLE correlations AS
+SELECT 'profits'::varchar AS measure
+       ,corr(profits, profits) AS profits
+       ,corr(profits, profits_change) AS profits_change
+       ,corr(profits, revenues_change) AS revenues_change
+  FROM fortune500;
+
+INSERT INTO correlations
+SELECT 'profits_change'::varchar AS measure
+       ,corr(profits_change, profits) AS profits
+       ,corr(profits_change, profits_change) AS profits_change
+       ,corr(profits_change, revenues_change) AS revenues_change
+  FROM fortune500;
+
+INSERT INTO correlations
+SELECT 'revenues_change'::varchar AS measure
+       ,corr(revenues_change, profits) AS profits
+       ,corr(revenues_change, profits_change) AS profits_change
+       ,corr(revenues_change, revenues_change) AS revenues_change
+  FROM fortune500;
+
+-- Select each column, rounding the correlations
+SELECT measure, 
+       round(profits::numeric,2) AS profits
+       ,round(profits_change::numeric,2) AS profits_change
+       ,round(revenues_change::numeric,2) AS revenues_change
+  FROM correlations;
+
+  

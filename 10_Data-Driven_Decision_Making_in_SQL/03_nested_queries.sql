@@ -191,3 +191,52 @@ SELECT name,
 FROM actors
 WHERE year_of_birth > 1990;
 
+
+
+/* 
+Dramas with high ratings
+
+The advertising team has a new focus. They want to draw the attention of the customers to dramas. Make a list of all movies that are in the drama genre and have an average rating higher than 9.
+*/
+
+-- Instructions 1/4
+-- Select the IDs of all dramas.
+
+SELECT movie_id
+FROM movies
+WHERE genre = 'Drama';
+
+-- Instructions 2/4
+-- Select the IDs of all movies with average rating higher than 9.
+
+SELECT movie_id 
+FROM renting
+GROUP BY movie_id
+HAVING AVG(rating) > 9;
+
+-- Instructions 3/4
+-- Select the IDs of all dramas with average rating higher than 9.
+
+SELECT movie_id
+FROM movies
+WHERE genre = 'Drama'
+INTERSECT  
+SELECT movie_id
+FROM renting
+GROUP BY movie_id
+HAVING AVG(rating)>9;
+
+-- Instructions 4/4
+-- Select all movies of in the drama genre with an average rating higher than 9.
+
+SELECT *
+FROM movies
+WHERE movie_id IN -- Select all movies of genre drama with average rating higher than 9
+   (SELECT movie_id
+    FROM movies
+    WHERE genre = 'Drama'
+    INTERSECT
+    SELECT movie_id
+    FROM renting
+    GROUP BY movie_id
+    HAVING AVG(rating)>9);
